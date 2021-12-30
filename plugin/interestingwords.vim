@@ -58,8 +58,8 @@ def Apply_color_to_word(n: number, word: string, mode: string, mid: number): voi
   endif
 
   try
-    call matchadd("InterestingWord" .. string((n + 1)), pat, 1, mid)
-  catch /E801/      " match id already taken.
+    call matchadd('InterestingWord' .. string((n + 1)), pat, 1, mid)
+  catch /E801/      # match id already taken.
   endtry
 enddef
 
