@@ -6,40 +6,41 @@ vim9script
 # Port in vim9script : NiVa 20211226
 # --------------------------------------------------------------------
 
-var interestingWordsGUIColors = ['#aeee00', '#ff0000', '#0000ff', '#b88823', '#ffa724', '#ff2c4b']
-var interestingWordsTermColors = ['154', '121', '211', '137', '214', '222']
+g:interestingWordsGUIColors  = ['#aeee00', '#ff0000', '#0000ff', '#b88823', '#ffa724', '#ff2c4b']
+g:interestingWordsTermColors = ['154', '121', '211', '137', '214', '222']
 
-interestingWordsGUIColors = exists('g:interestingWordsGUIColors') ? g:interestingWordsGUIColors : InterestingWordsGUIColors
-interestingWordsTermColors = exists('g:interestingWordsTermColors') ? g:interestingWordsTermColors : InterestingWordsTermColors
+g:interestingWordsGUIColors  = exists('g:interestingWordsGUIColors')  ? g:interestingWordsGUIColors : InterestingWordsGUIColors
+g:interestingWordsTermColors = exists('g:interestingWordsTermColors') ? g:interestingWordsTermColors : InterestingWordsTermColors
 
-var hasBuiltColors = 0
+var s:hasBuiltColors = 0
+var currentWord = ''
 
-var interestingWords = []
-var interestingModes = []
-var mids = {}
+var s:interestingWords = []
+var s:interestingModes = []
+var s:mids = {}
 var recentlyUsed = []
 
 def ColorWord(word: string, mode: string): void
-  if !(HasBuiltColors)
+  if !(s:hasBuiltColors)
     BuildColors()
   endif
 
   # gets the lowest unused index
-  n = index(InterestingWords, 0)
+  var n = index(s:interestingWords, 0)
   if (n == -1)
     if !(exists('g:interestingWordsCycleColors') && g:interestingWordsCycleColors)
-      echom "InterestingWords: max number of highlight groups reached " .. len(InterestingWords)
+      echom "InterestingWords: max number of highlight groups reached " .. len(s:interestingWords)
       return
     else
       n = s:recentlyUsed[0]
-      UncolorWord(InterestingWords[n])
+      UncolorWord(s:interestingWords[n])
     endif
   endif
 
-  mid = 595129 + n
-  InterestingWords[n] = word
-  InterestingModes[n] = mode
-  Mids[word] = mid
+  var mid = 595129 + n
+  s:interestingWords[n] = word
+  s:interestingModes[n] = mode
+  s:mids[word] = mid
 
   Apply_color_to_word(n, word, mode, mid)
 
@@ -47,8 +48,9 @@ def ColorWord(word: string, mode: string): void
 
 enddef
 
-def Apply_color_to_word(n: number, word: string, mode: string, mid: string): void
-  case = CheckIgnoreCase(word) ? '\c' : '\C'
+def Apply_color_to_word(n: number, word: string, mode: string, mid: number): void
+  var case = CheckIgnoreCase(word) ? '\c' : '\C'
+  var pat: string = ''
   if mode == 'v'
     pat = case .. '\V\zs' .. escape(word, '\') .. '\ze'
   else
@@ -56,7 +58,7 @@ def Apply_color_to_word(n: number, word: string, mode: string, mid: string): voi
   endif
 
   try
-    matchadd("InterestingWord" .. (n + 1), pat, 1, mid)
+    call matchadd("InterestingWord" .. string((n + 1)), pat, 1, mid)
   catch /E801/      " match id already taken.
   endtry
 enddef
@@ -80,14 +82,14 @@ def s:nearest_group_at_cursor(): string
 enddef
 
 def UncolorWord(word: string): void
-  index = index(InterestingWords, word)
+  var index = index(s:interestingWords, word)
 
   if (index > -1)
-    mid = Mids[word]
+    var mid = s:mids[word]
 
     silent! matchdelete(mid)
-    InterestingWords[index] = 0
-    unlet Mids[word]
+    s:interestingWords[index] = 0
+    unlet s:mids[word]
   endif
 enddef
 
@@ -102,9 +104,9 @@ def WordNavigation(direction: string): void
     currentWord = tolower(currentWord)
   endif
 
-  if (index(InterestingWords, currentWord) > -1)
-    l:index = index(InterestingWords, currentWord)
-    l:mode = InterestingModes[index]
+  if (index(:interestingWords, currentWord) > -1)
+    l:index = index(s:interestingWords, currentWord)
+    l:mode = s:interestingModes[index]
     case = CheckIgnoreCase(currentWord) ? '\c' : '\C'
     if l:mode == 'v'
       pat = case .. '\V\zs' .. escape(currentWord, '\') .. '\ze'
@@ -129,9 +131,24 @@ def WordNavigation(direction: string): void
   endif
 enddef
 
-def InterestingWords(mode: string): void
+def GetVisualSelection(): string
+  var lnum1: number = 0
+  var lnum2: number = 0
+  var col1: number  = 0
+  var col2: number  = 0
+  # Why is this not a built-in Vim script function?!
+  [lnum1, col1] = getpos("'<")[1 : 2]
+  [lnum2, col2] = getpos("'>")[1 : 2]
+  var lines = getline(lnum1, lnum2)
+  lines[-1] = lines[-1][ : col2 - (&selection == 'inclusive' ? 1 : 2)]
+  lines[0] = lines[0][col1 - 1 : ]
+  return join(lines, "\n")
+enddef
+
+export def InterestingWords(mode: string): void
+  echomsg 'imported function InterestingWords'
   if mode == 'v'
-    currentWord = Get_visual_selection()
+    currentWord = GetVisualSelection()
   else
     currentWord = expand('<cword>') .. ''
   endif
@@ -141,22 +158,13 @@ def InterestingWords(mode: string): void
   if (CheckIgnoreCase(currentWord))
     currentWord = tolower(currentWord)
   endif
-  if (index(InterestingWords, currentWord) == -1)
+  if (index(s:interestingWords, currentWord) == -1)
     ColorWord(currentWord, mode)
   else
     UncolorWord(currentWord)
   endif
 enddef
 
-def Get_visual_selection(): string
-  # Why is this not a built-in Vim script function?!
-  [lnum1, col1] = getpos("'<")[1:2]
-  [lnum2, col2] = getpos("'>")[1:2]
-  lines = getline(lnum1, lnum2)
-  lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
-  lines[0] = lines[0][col1 - 1:]
-  return join(lines, "\n")
-enddef
 
 def UncolorAllWords(): void
   for word in InterestingWords
@@ -169,10 +177,10 @@ enddef
 
 def RecolorAllWords()
   i = 0
-  for word in InterestingWords
+  for word in s:interestingWords
     if (type(word) == 1)
-      mode = InterestingModes[i]
-      mid = Mids[word]
+      mode = s:interestingModes[i]
+      mid = s:mids[word]
       Apply_color_to_word(i, word, mode, mid)
     endif
     i += 1
@@ -197,28 +205,28 @@ def MarkRecentlyUsed(n: number): void
   add(s:recentlyUsed, n)
 enddef
 
-def UiMode(): string
+def s:UiMode(): string
   # Stolen from airline's airline#init#gui_mode()
   return ((has('nvim') && exists('$NVIM_TUI_ENABLE_TRUE_COLOR') && !exists("+termguicolors"))
-        \ || has('gui_running') || (has("termtruecolor") && &guicolors == 1) || (has("termguicolors") && &termguicolors == 1)) ?
-        \ 'gui' : 'cterm'
+     \ || has('gui_running') || (has("termtruecolor") && &guicolors == 1) || (has("termguicolors") && &termguicolors == 1)) ?
+      \ 'gui' : 'cterm'
 enddef
 
 # initialise highlight colors from list of GUIColors
 # initialise length of InterestingWord list
 # initialise s:recentlyUsed list
 def BuildColors(): void 
-  if (HasBuiltColors)
+  if (s:hasBuiltColors)
     return
   endif
-  ui = UiMode()
-  wordColors = (ui == 'gui') ? g:interestingWordsGUIColors : g:interestingWordsTermColors
+  var ui = s:UiMode()
+  var wordColors = (ui == 'gui') ? g:interestingWordsGUIColors : g:interestingWordsTermColors
   if (exists('g:interestingWordsRandomiseColors') && g:interestingWordsRandomiseColors)
     # fisher-yates shuffle
-    i = len(wordColors)-1
+    var i = len(wordColors) - 1
     while i > 0
-      j = s:Random(i)
-      temp = wordColors[i]
+      var j = s:Random(i)
+      var temp = wordColors[i]
       wordColors[i] = wordColors[j]
       wordColors[j] = temp
       i -= 1
@@ -226,21 +234,21 @@ def BuildColors(): void
   endif
   # select ui type
   # highlight group indexed from 1
-  currentIndex = 1
+  var currentIndex = 1
   for wordColor in wordColors
     execute 'hi! def InterestingWord' .. currentIndex .. ' ' .. ui .. 'bg=' .. wordColor .. ' ' .. ui .. 'fg=Black'
-    add(InterestingWords, 0)
-    add(InterestingModes, 'n')
-    add(s:recentlyUsed, currentIndex-1)
+    add(s:interestingWords, 0)
+    add(s:interestingModes, 'n')
+    add(s:recentlyUsed, currentIndex - 1)
     currentIndex += 1
   endfor
-  HasBuiltColors = 1
+  s:hasBuiltColors = 1
 enddef
 
 # helper function to get random number between 0 and n-1 inclusive
 def s:Random(n: number): number
-  timestamp = reltimestr(reltime())[-2:]
-  return float2nr(floor(n * timestamp/100))
+  var timestamp: number = reltimestr(reltime())[ -2 : ]->str2nr()
+  return float2nr(floor(n * timestamp / 100))
 enddef
 
 if !exists('g:interestingWordsDefaultMappings') || g:interestingWordsDefaultMappings != 0
