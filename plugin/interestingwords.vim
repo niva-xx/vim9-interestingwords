@@ -19,6 +19,7 @@ var s:interestingWords = []
 var s:interestingModes = []
 var s:mids = {}
 var recentlyUsed = []
+var searchFlag: string = ''
 
 def ColorWord(word: string, mode: string): void
   if !(s:hasBuiltColors)
@@ -49,8 +50,8 @@ def ColorWord(word: string, mode: string): void
 enddef
 
 def Apply_color_to_word(n: number, word: string, mode: string, mid: number): void
-  var case = CheckIgnoreCase(word) ? '\c' : '\C'
-  var pat: string = ''
+  var case: string = CheckIgnoreCase(word) ? '\c' : '\C'
+  var  pat: string = ''
   if mode == 'v'
     pat = case .. '\V\zs' .. escape(word, '\') .. '\ze'
   else
@@ -64,17 +65,18 @@ def Apply_color_to_word(n: number, word: string, mode: string, mid: number): voi
 enddef
 
 def s:nearest_group_at_cursor(): string
-  l:matches = {}
-  for l:match_item in getmatches()
-    l:mids = filter(items(Mids), 'v:val[1] == l:match_item.id')
-    if len(l:mids) == 0
+  var matches: dict<any> = {}
+  for l_match_item in getmatches()
+    # var l_mids = filter(items(s:mids), 'v:val[1] == l_match_item.id')
+    var l_mids = items(s:mids)->filter((_, v) => v[1] == l_match_item.id)
+    if len(l_mids) == 0
       continue
     endif
-    l:word = l:mids[0][0]
-    l:position = match(getline('.'), l:match_item.pattern)
-    if l:position > -1
-      if col('.') > l:position && col('.') <= l:position + len(l:word)
-        return l:word
+    var word: string = l_mids[0][0]
+    var position: number = match(getline('.'), l_match_item.pattern)
+    if position > -1
+      if col('.') > position && col('.') <= position + len(word)
+        return word
       endif
     endif
   endfor
@@ -97,23 +99,24 @@ def Getmatch(mid: string): string
   return filter(getmatches(), 'v:val.id==mid')[0]
 enddef
 
-def WordNavigation(direction: string): void
+def WordNavigation(direction: bool): void
   currentWord = s:nearest_group_at_cursor()
 
   if (CheckIgnoreCase(currentWord))
     currentWord = tolower(currentWord)
   endif
 
-  if (index(:interestingWords, currentWord) > -1)
-    l:index = index(s:interestingWords, currentWord)
-    l:mode = s:interestingModes[index]
-    case = CheckIgnoreCase(currentWord) ? '\c' : '\C'
-    if l:mode == 'v'
-      pat = case .. '\V\zs' .. escape(currentWord, '\') .. '\ze'
+  if (index(s:interestingWords, currentWord) > -1)
+    var index: number = index(s:interestingWords, currentWord)
+    var mode: string = s:interestingModes[index]
+    var case: string = CheckIgnoreCase(currentWord) ? '\c' : '\C'
+
+    var pat: string = case 
+    if mode == 'v'
+      pat = pat .. '\V\zs' .. escape(currentWord, '\') .. '\ze'
     else
-      pat = case .. '\V\<' .. escape(currentWord, '\') .. '\>'
+      pat = pat .. '\V\<' .. escape(currentWord, '\') .. '\>'
     endif
-    searchFlag = ''
     if !(direction)
       searchFlag = 'b'
     endif
@@ -200,7 +203,7 @@ enddef
 
 # moves the index to the back of the s:recentlyUsed list
 def MarkRecentlyUsed(n: number): void
-  index = index(s:recentlyUsed, n)
+  var index = index(s:recentlyUsed, n)
   remove(s:recentlyUsed, index)
   add(s:recentlyUsed, n)
 enddef
@@ -260,22 +263,22 @@ if g:interestingWordsDefaultMappings && !hasmapto('<Plug>InterestingWords')
   vnoremap <silent> <leader>k :InterestingWords('v')<cr>
   nnoremap <silent> <leader>K :UncolorAllWords()<cr>
 
-  nnoremap <silent> n :WordNavigation(1)<cr>
-  nnoremap <silent> N :WordNavigation(0)<cr>
+  nnoremap <silent> n :vim9cmd <SID>WordNavigation(1)<CR>
+  nnoremap <silent> N :vim9cmd <SID>WordNavigation(0)<CR>
 endif
 
 if g:interestingWordsDefaultMappings
   try
     nnoremap <silent> <unique> <script> <Plug>InterestingWords
-          \ :InterestingWords('n')<cr>
+          \ :InterestingWords('n')<CR>
     vnoremap <silent> <unique> <script> <Plug>InterestingWords
-          \ :InterestingWords('v')<cr>
+          \ :InterestingWords('v')<CR>
     nnoremap <silent> <unique> <script> <Plug>InterestingWordsClear
-          \ :UncolorAllWords()<cr>
+          \ :UncolorAllWords()<CR>
     nnoremap <silent> <unique> <script> <Plug>InterestingWordsForeward
-          \ :WordNavigation(1)<cr>
+          \ :WordNavigation(1)<CR>
     nnoremap <silent> <unique> <script> <Plug>InterestingWordsBackward
-          \ :WordNavigation(0)<cr>
+          \ :WordNavigation(0)<CR>
   catch /E227/
   endtry
 endif
