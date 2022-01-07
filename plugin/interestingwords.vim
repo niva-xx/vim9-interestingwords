@@ -171,8 +171,8 @@ export def g:InterestingWords(mode: string): void
 enddef
 
 
-def UncolorAllWords(): void
-  for word in InterestingWords
+def g:UncolorAllWords(): void
+  for word in s:interestingWords
     # check that word is actually a String since '0' is falsy
     if (type(word) == 1)
       UncolorWord(word)
