@@ -11,8 +11,8 @@ vim-interestingwords highlights the occurrences of the word under the cursor thr
 
 The recommended installation is through `vim-plug`:
 
-```vimscript
-Plug 'lfv89/vim-interestingwords'
+```vim9script
+Plug 'niva-xx/vim9interestingwords'
 ```
 
 ## Usage
@@ -37,9 +37,9 @@ Finally, if you don't want to toggle every single highlighted word and want to c
 
 The plugin comes with those default mapping, but you can change it as you like:
 
-`let g:interestingWordsDefaultMappings = 0` if to disable default mapping
+`g:interestingWordsDefaultMappings = 0` if to disable default mapping
 
-```vimscript
+```vim9script default mapping
 nnoremap <silent> <leader>k :call InterestingWords('n')<cr>
 vnoremap <silent> <leader>k :call InterestingWords('v')<cr>
 nnoremap <silent> <leader>K :call UncolorAllWords()<cr>
@@ -48,24 +48,29 @@ nnoremap <silent> n :call WordNavigation(1)<cr>
 nnoremap <silent> N :call WordNavigation(0)<cr>
 ```
 
+```vim9script $MYVIMRC own default mapping
+nnoremap <silent> hl :call g:InterestingWords('n')<CR>
+vnoremap <silent> hl :call g:InterestingWords('v')<CR>
+```
+
 Thanks to **@gelguy** it is now possible to randomise and configure your own colors
 
 To configure the colors for a GUI, add this to your .vimrc:
 
-```vimscript
-let g:interestingWordsGUIColors = ['#8CCBEA', '#A4E57E', '#FFDB72', '#FF7272', '#FFB3FF', '#9999FF']
+```vim9script
+g:interestingWordsGUIColors = [ '#ffa54c', '#dab600', '#a98600', '#f4eecc', '#b87e7e', '#c7dcc7' ] 
 ```
 
 And for a terminal:
 
-```vimscript
-let g:interestingWordsTermColors = ['154', '121', '211', '137', '214', '222']
+```vim9script
+g:interestingWordsTermColors = ['154', '121', '211', '137', '214', '222']
 ```
 
 Also, if you want to randomise the colors (applied to each new buffer), add this to your .vimrc:
 
-```vimscript
-let g:interestingWordsRandomiseColors = 1
+```vim9script
+g:interestingWordsRandomiseColors = 1
 ```
 
 ## Credits
