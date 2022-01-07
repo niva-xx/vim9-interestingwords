@@ -3,7 +3,8 @@ vim9script
 # This plugin was inspired and based on Steve Losh's interesting words
 # ..vimrc config https://www.youtube.com/watch?v=xZuy4gBghho
 
-# Port in vim9script : NiVa 20211226
+# 20211226 NV : Port in vim9script
+# 20220107 NV : Take accound of https://github.com/vim/vim/releases/tag/v8.2.4019  
 # --------------------------------------------------------------------
 
 g:interestingWordsGUIColors  = ['#aeee00', '#ff0000', '#0000ff', '#b88823', '#ffa724', '#ff2c4b']
@@ -148,7 +149,7 @@ def GetVisualSelection(): string
   return join(lines, "\n")
 enddef
 
-export def InterestingWords(mode: string): void
+export def g:InterestingWords(mode: string): void
   echomsg 'imported function InterestingWords'
   if mode == 'v'
     currentWord = GetVisualSelection()
@@ -259,9 +260,9 @@ if !exists('g:interestingWordsDefaultMappings') || g:interestingWordsDefaultMapp
 endif
 
 if g:interestingWordsDefaultMappings && !hasmapto('<Plug>InterestingWords')
-  nnoremap <silent> <leader>k :InterestingWords('n')<cr>
-  vnoremap <silent> <leader>k :InterestingWords('v')<cr>
-  nnoremap <silent> <leader>K :UncolorAllWords()<cr>
+  nnoremap <silent> <leader>k :call g:InterestingWords('n')<cr>
+  vnoremap <silent> <leader>k :call g:InterestingWords('v')<cr>
+  nnoremap <silent> <leader>K :call g:UncolorAllWords()<cr>
 
   nnoremap <silent> n :vim9cmd <SID>WordNavigation(1)<CR>
   nnoremap <silent> N :vim9cmd <SID>WordNavigation(0)<CR>
@@ -270,11 +271,11 @@ endif
 if g:interestingWordsDefaultMappings
   try
     nnoremap <silent> <unique> <script> <Plug>InterestingWords
-          \ :InterestingWords('n')<CR>
+          \ :g:InterestingWords('n')<CR>
     vnoremap <silent> <unique> <script> <Plug>InterestingWords
-          \ :InterestingWords('v')<CR>
+          \ :g:InterestingWords('v')<CR>
     nnoremap <silent> <unique> <script> <Plug>InterestingWordsClear
-          \ :UncolorAllWords()<CR>
+          \ :g:UncolorAllWords()<CR>
     nnoremap <silent> <unique> <script> <Plug>InterestingWordsForeward
           \ :WordNavigation(1)<CR>
     nnoremap <silent> <unique> <script> <Plug>InterestingWordsBackward
