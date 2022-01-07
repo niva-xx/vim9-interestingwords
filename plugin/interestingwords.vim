@@ -3,23 +3,24 @@ vim9script
 # This plugin was inspired and based on Steve Losh's interesting words
 # ..vimrc config https://www.youtube.com/watch?v=xZuy4gBghho
 
-# 20211226 NV : Port in vim9script
-# 20220107 NV : Take accound of https://github.com/vim/vim/releases/tag/v8.2.4019  
+# NiVa 20211226 : Port in vim9script
+# NiVa 20220107 : Take account of patch https://github.com/vim/vim/releases/tag/v8.2.4019
 # --------------------------------------------------------------------
 
-g:interestingWordsGUIColors  = ['#aeee00', '#ff0000', '#0000ff', '#b88823', '#ffa724', '#ff2c4b']
-g:interestingWordsTermColors = ['154', '121', '211', '137', '214', '222']
+var s:interestingWordsGUIColors  = ['#aeee00', '#ff0000', '#0000ff', '#b88823', '#ffa724', '#ff2c4b']
+var s:interestingWordsTermColors = ['154', '121', '211', '137', '214', '222']
 
-g:interestingWordsGUIColors  = exists('g:interestingWordsGUIColors')  ? g:interestingWordsGUIColors : InterestingWordsGUIColors
-g:interestingWordsTermColors = exists('g:interestingWordsTermColors') ? g:interestingWordsTermColors : InterestingWordsTermColors
+s:interestingWordsGUIColors  = exists('g:interestingWordsGUIColors')  ? g:interestingWordsGUIColors  : s:interestingWordsGUIColors
+s:interestingWordsTermColors = exists('g:interestingWordsTermColors') ? g:interestingWordsTermColors : s:interestingWordsTermColors
 
-var s:hasBuiltColors = 0
-var currentWord = ''
+
+var s:hasBuiltColors   = 0
+var currentWord        = ''
 
 var s:interestingWords = []
 var s:interestingModes = []
-var s:mids = {}
-var recentlyUsed = []
+var s:mids             = {}
+var recentlyUsed       = []
 var searchFlag: string = ''
 
 def ColorWord(word: string, mode: string): void
@@ -224,7 +225,7 @@ def BuildColors(): void
     return
   endif
   var ui = s:UiMode()
-  var wordColors = (ui == 'gui') ? g:interestingWordsGUIColors : g:interestingWordsTermColors
+  var wordColors = (ui == 'gui') ? s:interestingWordsGUIColors : s:interestingWordsTermColors
   if (exists('g:interestingWordsRandomiseColors') && g:interestingWordsRandomiseColors)
     # fisher-yates shuffle
     var i = len(wordColors) - 1
