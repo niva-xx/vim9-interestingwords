@@ -5,7 +5,12 @@
 
 vim-interestingwords highlights the occurrences of the word under the cursor throughout the buffer. Different words can be highlighted at the same time. The plugin also enables one to navigate through the highlighted words in the buffer just like one would through the results of a search.
 
+![vim9InterestingWords](https://user-images.githubusercontent.com/89611393/169270498-3e8f689c-707c-4910-b4dd-bc4071cbc981.gif)
+
+
 ![Screenshot](https://i.imgbox.com/5k3OJWIk.png)
+
+
 
 ## Installation
 
