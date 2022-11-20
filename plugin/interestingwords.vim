@@ -1,30 +1,33 @@
 vim9script
-# --------------------------------------------------------------------
+# -NV-Update-Log------------------------------------------------------{{{
 # This plugin was inspired and based on Steve Losh's interesting words
 # ..vimrc config http//www.youtube.com/watch?v=xZuy4gBghho
 
-# NV 20220518 : Some modifications due to vim9 restrictions (var s:)
-# NV 20220107 : Take account of patch http//github.com/vim/vim/releases/tag/v8.2.4019
-# NV 20211226 : Port in vim9script
-# --------------------------------------------------------------------
-
-var interestingWordsGUIColors  = ['#ca0020', '#f4a582', '#d5d5d5', '#92c5de', '#0571b0']
-var interestingWordsTermColors = ['154', '121', '211', '137', '214', '222']
+# 2022-11-20 : Taking account colour blindless deutenaropia
+# 2022-01-07 : Take account of patch http//github.com/vim/vim/releases/tag/v8.2.4019
+# 2021-12-26 : Port in vim9script
+# --------------------------------------------------------------------}}}
+# Some vars--{{{
+# https://www.colourblindawareness.org/colour-blindness/types-of-colour-blindness/
+var interestingWordsGUIColors_nonDeuteranopian  = [ '#bf7f7f', '#d5d5d5', '#e58900' ]
+var interestingWordsGUIColors  = [ '#FDEB1F', '#EED94F', '#E5CD43', '#BFAA25', '#BB9F4D', '#b19233', '#9E7701', '#556aad', '#7687bd', '#99a5cd', '#bbc3de']
+var interestingWordsTermColors = [ '154', '121', '211', '137', '214', '222' ]
 
 interestingWordsGUIColors  = exists('g:interestingWordsGUIColors')  ? g:interestingWordsGUIColors  : interestingWordsGUIColors
 interestingWordsTermColors = exists('g:interestingWordsTermColors') ? g:interestingWordsTermColors : interestingWordsTermColors
 
 
-var hasBuiltColors   = 0
+var hasBuiltColors     = 0
 var currentWord        = ''
 
-var interestingWords = []
-var interestingModes = []
-var mids             = {}
+var interestingWords   = []
+var interestingModes   = []
+var mids               = {}
 var recentlyUsed       = []
 var searchFlag: string = ''
+# --}}}
 
-def ColorWord(word: string, mode: string): void
+def ColorWord(word: string, mode: string): void # {{{
   if !(hasBuiltColors)
     BuildColors()
   endif
@@ -50,9 +53,8 @@ def ColorWord(word: string, mode: string): void
 
   MarkRecentlyUsed(n)
 
-enddef
-
-def Apply_color_to_word(n: number, word: string, mode: string, mid: number): void
+enddef # }}}
+def Apply_color_to_word(n: number, word: string, mode: string, mid: number): void # {{{
   var case: string = CheckIgnoreCase(word) ? '\c' : '\C'
   var  pat: string = ''
   if mode == 'v'
@@ -65,9 +67,8 @@ def Apply_color_to_word(n: number, word: string, mode: string, mid: number): voi
     call matchadd('InterestingWord' .. string((n + 1)), pat, 1, mid)
   catch /E801/      # match id already taken.
   endtry
-enddef
-
-def Nearest_group_at_cursor(): string
+enddef # }}}
+def Nearest_group_at_cursor(): string # {{{
   # var matche dict<any> = {}
   for l_match_item in getmatches()
     # var l_mids = filter(items(mids), 'v:val[1] == l_match_item.id')
@@ -84,9 +85,8 @@ def Nearest_group_at_cursor(): string
     endif
   endfor
   return ''
-enddef
-
-def UncolorWord(word: string): void
+enddef # }}}
+def UncolorWord(word: string): void # {{{
   var index = index(interestingWords, word)
 
   if (index > -1)
@@ -96,13 +96,11 @@ def UncolorWord(word: string): void
     interestingWords[index] = 0
     unlet mids[word]
   endif
-enddef
-
-def Getmatch(mid: string): string
+enddef # }}}
+def Getmatch(mid: string): string # {{{
   return filter(getmatches(), 'v:val.id==mid')[0]
-enddef
-
-def WordNavigation(direction: bool): void
+enddef # }}}
+def WordNavigation(direction: bool): void # {{{
   currentWord = Nearest_group_at_cursor()
 
   if (CheckIgnoreCase(currentWord))
@@ -135,9 +133,8 @@ def WordNavigation(direction: bool): void
       echohl WarningMsg | echomsg "E486: Pattern not found: " .. @/
     endtry
   endif
-enddef
-
-def GetVisualSelection(): string
+enddef # }}}
+def GetVisualSelection(): string # {{{
   var lnum1: number = 0
   var lnum2: number = 0
   var col1: number  = 0
@@ -149,9 +146,9 @@ def GetVisualSelection(): string
   lines[-1] = lines[-1][ : col2 - (&selection == 'inclusive' ? 1 : 2)]
   lines[0] = lines[0][col1 - 1 : ]
   return join(lines, "\n")
-enddef
+enddef # }}}
 
-export def g:InterestingWords(mode: string): void
+export def g:InterestingWords(mode: string): void # {{{
   echomsg 'InterestingWords well exported :)'
   if mode == 'v'
     currentWord = GetVisualSelection()
@@ -169,19 +166,17 @@ export def g:InterestingWords(mode: string): void
   else
     UncolorWord(currentWord)
   endif
-enddef
+enddef # }}}
 
-
-def g:UncolorAllWords(): void
+def g:UncolorAllWords(): void # {{{
   for word in interestingWords
     # check that word is actually a String since '0' is falsy
     if (type(word) == 1)
       UncolorWord(word)
     endif
   endfor
-enddef
-
-def RecolorAllWords()
+enddef # }}}
+def RecolorAllWords() # {{{
   i = 0
   for word in interestingWords
     if (type(word) == 1)
@@ -191,10 +186,10 @@ def RecolorAllWords()
     endif
     i += 1
   endfor
-enddef
+enddef # }}}
 
-# returns true if the ignorecase flag needs to be used
-def CheckIgnoreCase(word: string): bool 
+def CheckIgnoreCase(word: string): bool  # {{{
+  # returns true if the ignorecase flag needs to be used
   # return false if case sensitive is used
   if (exists('g:interestingWordsCaseSensitive'))
     return !g:interestingWordsCaseSensitive
@@ -202,26 +197,21 @@ def CheckIgnoreCase(word: string): bool
   # checks ignorecase
   # and then if smartcase is on, check if the word contains an uppercase char
   return &ignorecase && (!&smartcase || (match(word, '\u') == -1))
-enddef
-
-# moves the index to the back of the recentlyUsed list
-def MarkRecentlyUsed(n: number): void
+enddef # }}}
+def MarkRecentlyUsed(n: number): void # {{{ moves the index to the back of the recentlyUsed list
   var index = index(recentlyUsed, n)
   remove(recentlyUsed, index)
   add(recentlyUsed, n)
-enddef
-
-def UiMode(): string
+enddef # }}}
+def UiMode(): string # {{{
   # Stolen from airline's airline#init#gui_mode()
   return ((has('nvim') && exists('$NVIM_TUI_ENABLE_TRUE_COLOR') && !exists("+termguicolors"))
-     \ || has('gui_running') || (has("termtruecolor") && &guicolors == 1) || (has("termguicolors") && &termguicolors == 1)) ?
-      \ 'gui' : 'cterm'
-enddef
-
-# initialise highlight colors from list of GUIColors
-# initialise length of InterestingWord list
-# initialise recentlyUsed list
-def BuildColors(): void 
+        \ || has('gui_running') || (has("termtruecolor") && &guicolors == 1) || (has("termguicolors") && &termguicolors == 1)) ?
+        \ 'gui' : 'cterm'
+enddef # }}}
+def BuildColors(): void  # {{{ # initialise highlight colors from list of GUIColors
+  # initialise length of InterestingWord list
+  # initialise recentlyUsed list
   if (hasBuiltColors)
     return
   endif
@@ -249,14 +239,13 @@ def BuildColors(): void
     currentIndex += 1
   endfor
   hasBuiltColors = 1
-enddef
-
-# helper function to get random number between 0 and n-1 inclusive
-def Random(n: number): number
+enddef # }}}
+def Random(n: number): number # {{{ helper function to get random number between 0 and n-1 inclusive
   var timestamp: number = reltimestr(reltime())[ -2 : ]->str2nr()
   return float2nr(floor(n * timestamp / 100))
-enddef
+enddef # }}}
 
+# {{{ Mapping
 if !exists('g:interestingWordsDefaultMappings') || g:interestingWordsDefaultMappings != 0
   g:interestingWordsDefaultMappings = 1
 endif
@@ -285,3 +274,6 @@ if g:interestingWordsDefaultMappings
   catch /E227/
   endtry
 endif
+# }}}
+
+# vim: set ft=vim ff=dos fdm=marker ts=2 :expandtab:
